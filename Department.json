@@ -10,5 +10,17 @@
     "name": "Kế toán",
     "description": "Thu nhập công ty",
     "directorId": 4
+  },
+  {
+    "Id": 3,
+    "name": "KTKQ",
+    "description": "sales ,maketing",
+    "directorId": 1
+  },
+  {
+    "Id": 4,
+    "name": "KTKQ",
+    "description": "sales ,maketing",
+    "directorId": 1
   }
 ]

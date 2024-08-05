@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs'); // Đổi từ `file` sang `fs` để đồng nhất
+const fs = require('fs'); 
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = 3000;
@@ -9,13 +10,13 @@ const port = 3000;
 app.use(bodyParser.json());
 
 // Hàm đọc file JSON
-const readFile = () => {
+const readDepartmentFile = () => {
   const data = fs.readFileSync('Department.json', 'utf-8'); 
   return JSON.parse(data || '[]');
 };
 
 // Hàm ghi file JSON
-const writeFile = (data) => {
+const writeDepartmentFile = (data) => {
   fs.writeFileSync('Department.json',JSON.stringify(data, null, 2))
   }
 
@@ -31,21 +32,21 @@ const writeEmployeesFile = (data) => {
 
 
 app.get('/departments', (req, res) => {
-  const departments = readFile();
+  const departments = readDepartmentFile();
   res.send(departments);
 });
 
 // Add a new department
 app.post('/departments', (req, res) => {
   const { name, description, directorId} = req.body; // Lấy dữ liệu từ request body
-  const departments = readFile();
+  const departments = readDepartmentFile();
    const newDepartment = {
     Id: departments.length + 1,name, description, directorId 
   };
 
   // Thêm department mới vào danh sách và lưu lại
   departments.push(newDepartment);
-  writeFile(departments);
+  writeDepartmentFile(departments);
   res.send(newDepartment);
 
 });
@@ -53,7 +54,7 @@ app.post('/departments', (req, res) => {
 app.put('/departments/:departmentId', (req, res) => {
   const id = parseInt(req.params.departmentId, 10); // Lấy ID từ URL
   const { name, description, directorId} = req.body; // Lấy dữ liệu mới từ request body
-  const departments = readFile(); // Đọc danh sách phòng ban hiện tại
+  const departments = readDepartmentFile(); // Đọc danh sách phòng ban hiện tại
 
   // Tìm chỉ số của phòng ban cần sửa
   const index = departments.findIndex(department => department.Id === id);
@@ -62,23 +63,25 @@ app.put('/departments/:departmentId', (req, res) => {
     return res.status(404).send({ error: 'Department not found' });
   }
   departments[index] = { name, description, directorId} ;
-  writeFile(departments);
+  writeDepartmentFile(departments);
   res.send(departments[index]);
 });
+// API xóa phòng ban 
 app.delete('/departments/:departmentId', (req, res) => {
   const departmentId = parseInt(req.params.departmentId, 10); // Đảm bảo rằng ID được chuyển đổi thành số nguyên
-  const departments = readFile(); // Đọc danh sách phòng ban hiện tại
+  const departments = readDepartmentFile(); // Đọc danh sách phòng ban hiện tại
 
-  
+  const index = departments.findIndex(department => department.Id === departmentId);
 
-  if (departmentId < 0 || departmentId >= departments.length) {
-      return res.status(404).json({ message: 'Employee not found' });
+  if (index === -1) {
+      return res.status(404).json({ message: 'Department not found' });
   }
- departments.splice(index, 1);
-  writeFile(departments);
-  res.json({});
 
-})
+  departments.splice(index, 1);
+  writeDepartmentFile(departments);
+  res.json({});
+});
+
 // ------------------------------------------------------------------------------------
 
 // API lấy tất cả nhân viên
@@ -90,7 +93,7 @@ app.get('/employees', (req, res) => {
 app.post('/employees', (req, res) => {
   const { name, age, departmentId, phone, email, salary } = req.body;
   const employees = readEmployeeFile();
-  const departments = readFile();
+  const departments = readDepartmentFile();
 
   // Kiểm tra phòng ban có tồn tại không
   const departmentExists = departments.some(department => department.Id === departmentId);
@@ -98,9 +101,9 @@ app.post('/employees', (req, res) => {
     return res.status(400).json({ message: 'Department not found' });
   }
 
-  // Kiểm tra salary và age phải là số và salary lớn hơn hoặc bằng 0
+
   if (typeof salary !== 'number' || salary < 0 || typeof age !== 'number' || age <= 0) {
-    return res.status(400).json({ message: 'Salary must be a number and greater than or equal to 0, and Age must be a positive number' });
+    return res.status(400).json({ message: 'Salary  và age k đúng định dạng ' });
   }
 
   // Lấy ID của nhân viên cuối cùng và tạo ID mới
@@ -127,7 +130,7 @@ app.put('/employees/:employeeId', (req, res) => {
   const employeeId = parseInt(req.params.employeeId, 10);
   const { name, age, departmentId, phone, email, salary } = req.body;
   const employees = readEmployeeFile();
-  const departments = readFile();
+  const departments = readDepartmentFile();
 
   const employeeIndex = employees.findIndex(employee => employee.employeeId === employeeId);
   if (employeeIndex === -1) {
@@ -149,8 +152,9 @@ app.put('/employees/:employeeId', (req, res) => {
 app.delete('/employees/:employeeId', (req, res) => {
   const employeeId = parseInt(req.params.employeeId, 10);
   const employees = readEmployeeFile();
+  const index = employees.findIndex(employee => employee.employeeId === employeeId);
 
-  if (employeeId < 0 || employeeId >= employees.length) {
+  if (employeeId === -1) {
       return res.status(404).json({ message: 'Employee not found' });
   }
 
@@ -185,7 +189,7 @@ const calculateAverageSalary = (departmentId, departments, employees) => {
 // API tính mức lương trung bình của một phòng ban
 app.get('/departments/:departmentId/average-salary', (req, res) => {
   const departmentId = parseInt(req.params.departmentId, 10); // Lấy ID phòng ban từ URL
-  const departments = readFile(); // Đọc danh sách phòng ban từ file
+  const departments = readDepartmentFile(); // Đọc danh sách phòng ban từ file
   const employees = readEmployeeFile(); // Đọc danh sách nhân viên từ file
 
   const averageSalary = calculateAverageSalary(departmentId, departments, employees);
@@ -201,7 +205,7 @@ app.get('/departments/:departmentId/average-salary', (req, res) => {
 
 // API tìm phòng ban có mức lương trung bình cao nhất
 app.get('/departments/highest-average-salary', (req, res) => {
-  const departments = readFile(); 
+  const departments = readDepartmentFile(); 
   const employees = readEmployeeFile(); 
 
   let highestAvgSalary = 0;
@@ -228,27 +232,22 @@ app.get('/departments/highest-average-salary', (req, res) => {
 
 // API tìm nhân viên có mức lương cao nhất trong phòng ban
 app.get('/departments/:departmentId/highest-salary-employee', (req, res) => {
-  const departmentId = parseInt(req.params.departmentId, 10); // Lấy ID phòng ban từ URL
-  const departments = readFile(); // Đọc danh sách phòng ban từ file
-  const employees = readEmployeeFile(); // Đọc danh sách nhân viên từ file
+  const departmentId = parseInt(req.params.departmentId, 10);
+  const departments = readDepartmentFile(); 
+  const employees = readEmployeeFile(); 
 
   // Tìm phòng ban với ID được truyền lên
   const targetDepartment = departments.find(department => department.Id === departmentId);
 
-  // Nếu không tìm thấy phòng ban
   if (!targetDepartment) {
     return res.status(404).json({ message: 'Department not found' });
   }
 
-  // Lọc danh sách nhân viên thuộc phòng ban tìm được
   const departmentEmployees = employees.filter(employee => employee.departmentId === departmentId);
-
-  // Nếu phòng ban không có nhân viên
   if (departmentEmployees.length === 0) {
     return res.status(404).json({ message: 'No employees found in this department' });
   }
-
-  // Tìm nhân viên có mức lương cao nhất
+  
   let highestSalaryEmployee = departmentEmployees[0];
   departmentEmployees.forEach(employee => {
     if (employee.salary > highestSalaryEmployee.salary) {
@@ -256,7 +255,6 @@ app.get('/departments/:departmentId/highest-salary-employee', (req, res) => {
     }
   });
 
-  // Trả về thông tin nhân viên có mức lương cao nhất
   res.json(highestSalaryEmployee);
 });
 
@@ -264,10 +262,9 @@ app.get('/departments/:departmentId/highest-salary-employee', (req, res) => {
 
 // API trả về danh sách các trưởng phòng
 app.get('/departments/directors', (req, res) => {
-  const departments = readFile(); // Đọc danh sách phòng ban từ file
-  const employees = readEmployeeFile(); // Đọc danh sách nhân viên từ file
+  const departments = readDepartmentFile(); 
+  const employees = readEmployeeFile(); 
 
-  // Tạo danh sách các trưởng phòng
   const directors = departments.map(department => {
     const director = employees.find(employee => employee.employeeId === department.directorId);
     return {
@@ -282,7 +279,7 @@ app.get('/departments/directors', (req, res) => {
         salary: director.salary
       } : null
     };
-  }).filter(department => department.director !== null); // Loại bỏ các phòng ban không có trưởng phòng
+  }).filter(department => department.director !== null); 
 
   res.json(directors);
 });
