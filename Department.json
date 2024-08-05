@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 1,
+    "name": "IT phòng ban",
+    "description": "Làm web",
+    "directorId": 1
+  },
+  {
+    "Id": 2,
+    "name": "Kế toán",
+    "description": "Thu nhập công ty",
+    "directorId": 4
+  }
+]

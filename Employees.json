@@ -1,0 +1,38 @@
+[
+  {
+    "employeeId": 1,
+    "name": "Nam",
+    "age": 21,
+    "departmentId": 1,
+    "phone": "0445532232",
+    "email": "fsdsdseee",
+    "salary": 1000200
+  },
+  {
+    "employeeId": 2,
+    "name": "Phương Anh",
+    "age": 23,
+    "departmentId": 1,
+    "phone": "0445532232",
+    "email": "fsdsdseee",
+    "salary": 10000
+  },
+  {
+    "employeeId": 3,
+    "name": "Yến",
+    "age": 21,
+    "departmentId": 1,
+    "phone": "0445532232",
+    "email": "fsdsdseee",
+    "salary": 1000
+  },
+  {
+    "employeeId": 4,
+    "name": "Phương Anh",
+    "age": 23,
+    "departmentId": 2,
+    "phone": "0445532232",
+    "email": "fsdsdseee",
+    "salary": 100000
+  }
+]
